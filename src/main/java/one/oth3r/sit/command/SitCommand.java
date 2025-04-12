@@ -14,50 +14,33 @@ import one.oth3r.sit.utl.Data;
 import one.oth3r.sit.utl.Logic;
 import one.oth3r.sit.utl.Utl;
 
+import me.lucko.fabric.api.permissions.v0.Permissions;
+import static net.minecraft.server.command.CommandManager.literal;
+
 import java.util.concurrent.CompletableFuture;
 
 public class SitCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("sit")
-                .requires((commandSource) -> commandSource.hasPermissionLevel(0))
-                .executes((context2) -> command(context2.getSource(), context2.getInput()))
-                .then(CommandManager.argument("args", StringArgumentType.string())
-                        .requires((commandSource) -> commandSource.hasPermissionLevel(2))
-                        .suggests(SitCommand::getSuggestions)
-                        .executes((context2) -> command(context2.getSource(), context2.getInput()))));
+                .requires(Permissions.require("sit.use", 0))
+                        .executes((context2) -> sitUse(context2.getSource()))
+                .then(literal("reload")
+                    .requires(Permissions.require("sit.reload", 2))
+                        .executes((context2) -> sitReload(context2.getSource()))
+                )
+                .then(literal("purgeChairEntities")
+                    .requires(Permissions.require("sit.reload", 2))
+                        .executes((context2) -> sitPurge(context2.getSource()))
+                )
+        );
     }
 
-    public static CompletableFuture<Suggestions> getSuggestions(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) {
-        builder.suggest("reload");
-        builder.suggest("purgeChairEntities");
-        return builder.buildFuture();
-    }
 
-    private static int command(ServerCommandSource source, String arg) {
+    // sit command
+    private static int sitUse(ServerCommandSource source) {
         ServerPlayerEntity player = source.getPlayer();
-        // trim all the arguments before the command (for commands like /execute)
-        int index = arg.indexOf("sit");
-        // trims the words before the text
-        if (index != -1) arg = arg.substring(index).trim();
 
-        String[] args = arg.split(" ");
-        // if command string starts with sit, remove it
-        if (args[0].equalsIgnoreCase("sit"))
-            args = arg.replaceFirst("sit ", "").split(" ");
-
-        // if console
-        if (player == null) {
-            if (args[0].equalsIgnoreCase("reload")) {
-                Logic.reload();
-                Data.LOGGER.info(Utl.lang("sit!.chat.reloaded").getString());
-            }
-            return 1;
-        }
-
-        // player
-
-        if (args[0].equalsIgnoreCase("sit")) {
-            // if the player can't sit where they're looking, try to sit below
+        if (player != null) {
             if (!Logic.sitLooking(player)) {
                 BlockPos pos = player.getBlockPos();
 
@@ -72,13 +55,30 @@ public class SitCommand {
                 Logic.sit(player, pos, null);
             }
         }
+        return 1;
+    }
 
-        if (args[0].equalsIgnoreCase("reload")) {
+    // reload command
+    private static int sitReload(ServerCommandSource source) {
+        ServerPlayerEntity player = source.getPlayer();
+
+        if (player != null) {
             Logic.reload();
             player.sendMessage(Utl.messageTag().append(Utl.lang("sit!.chat.reloaded").formatted(Formatting.GREEN)));
+        } else {
+            Logic.reload();
+            Data.LOGGER.info(Utl.lang("sit!.chat.reloaded").getString());
         }
+        return 1;
+    }
 
-        if (args[0].equalsIgnoreCase("purgeChairEntities")) Utl.Entity.purge(player,true);
+    // purge command
+    private static int sitPurge(ServerCommandSource source) {
+        ServerPlayerEntity player = source.getPlayer();
+
+        if (player != null) {
+            Utl.Entity.purge(player,true);
+        }
         return 1;
     }
 }
