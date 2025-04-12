@@ -15,6 +15,8 @@ import one.oth3r.sit.file.SittingConfig;
 import one.oth3r.sit.file.HandSetting;
 import org.jetbrains.annotations.Nullable;
 
+import me.lucko.fabric.api.permissions.v0.Permissions;
+
 public class Logic {
     public static boolean sit(ServerPlayerEntity player, BlockPos blockPos, @Nullable BlockHitResult hitResult) {
         // cant sit if crouching
@@ -57,6 +59,9 @@ public class Logic {
      */
     public static boolean checkHands(ServerPlayerEntity player) {
         SittingConfig sittingConfig = FileData.getPlayerSetting(player);
+        // no permissions
+        if (!Permissions.check(player, "sit.use", 0)) return false;
+
         // if can't sit with hand, false
         if (!sittingConfig.canSitWithHand()) return false;
 

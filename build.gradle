@@ -16,6 +16,7 @@ base {
 repositories {
 	maven { url = "https://maven.terraformersmc.com/releases/" }
 	maven { url = "https://maven.isxander.dev/releases" }
+	maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
 }
 
 loom {
@@ -30,6 +31,8 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+	modImplementation include("me.lucko:fabric-permissions-api:0.3.1")
 }
 
 processResources {
@@ -95,7 +98,7 @@ modrinth {
 	versionName = "v${project.mod_version} [Fabric]"
 	versionType = "release"
 	uploadFile = remapJar
-	gameVersions = [project.minecraft_version]
+	gameVersions = project.minecraft_versions.split(",").toList()
 	loaders = ['fabric', 'quilt']
 	dependencies = [
 			new ModDependency('P7dR8mSH', 'required'),
