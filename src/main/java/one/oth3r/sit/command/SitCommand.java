@@ -15,6 +15,7 @@ import one.oth3r.sit.utl.Logic;
 import one.oth3r.sit.utl.Utl;
 
 import me.lucko.fabric.api.permissions.v0.Permissions;
+import static net.minecraft.server.command.CommandManager.literal;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -23,19 +24,17 @@ public class SitCommand {
         dispatcher.register(CommandManager.literal("sit")
                 .requires(Permissions.require("sit.use", 0))
                         .executes((context2) -> sitUse(context2.getSource()))
-                // .executes((context2) -> command(context2.getSource(), context2.getInput()))
-                // .then(CommandManager.argument("args", StringArgumentType.string())
-                //         .requires((commandSource) -> commandSource.hasPermissionLevel(2))
-                //         .suggests(SitCommand::getSuggestions)
-                //         .executes((context2) -> command(context2.getSource(), context2.getInput()))));
+                .then(literal("reload")
+                    .requires(Permissions.require("sit.reload", 2))
+                        .executes((context2) -> sitReload(context2.getSource()))
+                )
+                .then(literal("purgeChairEntities")
+                    .requires(Permissions.require("sit.reload", 2))
+                        .executes((context2) -> sitPurge(context2.getSource()))
+                )
         );
     }
 
-    public static CompletableFuture<Suggestions> getSuggestions(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) {
-        builder.suggest("reload");
-        builder.suggest("purgeChairEntities");
-        return builder.buildFuture();
-    }
 
     // sit command
     private static int sitUse(ServerCommandSource source) {
